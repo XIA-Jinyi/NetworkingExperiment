@@ -1,0 +1,4 @@
+PROJECT(Test)
+
+INCLUDE_DIRECTORIES(../BasicSmtp/inc)
+ADD_EXECUTABLE(${PROJECT_NAME} src/main.cpp)
