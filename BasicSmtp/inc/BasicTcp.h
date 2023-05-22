@@ -98,7 +98,7 @@ namespace MailProxy {
          * @param server_addr 服务器地址
          * @param port 端口号
         */
-        void connect(
+        void tcp_connect(
             const char* server_addr,
             const char* port
         );
@@ -108,7 +108,7 @@ namespace MailProxy {
          * @param data 待发送的数据
          * @param flags 传递给 send 函数的 flags 参数
         */
-        void send(
+        void tcp_send(
             const char* data,
             int flags = 0
         );
@@ -117,7 +117,7 @@ namespace MailProxy {
          * @brief 接收数据。
          * @param flags 传递给 recv 函数的 flags 参数
         */
-        void receive(
+        void tcp_receive(
             int flags = 0
         );
 
@@ -125,7 +125,7 @@ namespace MailProxy {
          * @brief 关闭连接。
          * @param how 关闭连接的方式
         */
-        void shutdown(
+        void tcp_shutdown(
             int how = SD_BOTH
         );
 
@@ -133,19 +133,19 @@ namespace MailProxy {
          * @brief 取出收到的数据。
          * @return 缓冲区内的数据
         */
-        std::string get_received();
+        auto get_received() -> std::string;
 
         /**
          * @brief 获取当前连接状态。
          * @return 状态码
         */
-        TcpStatus get_status();
+        auto get_status() -> TcpStatus;
 
         /**
          * @brief 获取当前连接状态的相关信息。
          * @return 状态相关信息
         */
-        std::string get_status_info();
+        auto get_status_info() -> std::string;
     };
 
 }
