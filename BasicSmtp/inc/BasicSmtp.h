@@ -8,15 +8,14 @@
 
 #pragma once
 
-
-#include <functional>
-#include <list>
-#include <string>
 #ifndef MAILPROXY_BASICSMTP_
 #define MAILPROXY_BASICSMTP_
 
 #include <cstdint>
 #include <BasicTcp.h>
+#include <functional>
+#include <list>
+#include <string>
 #include "Email.h"
 
 namespace MailProxy {
