@@ -66,13 +66,14 @@ namespace MailProxy {
         UnknownError = 0xFF,
     };
 
-    class BasicTcp{
+    class ClientTcp{
     private:
         WSADATA wsaData;
         SOCKET ConnectSocket = INVALID_SOCKET;
         struct addrinfo* result = NULL, * ptr = NULL, hints;
         int iResult;
-        char* sendbuf = NULL, * recvbuf = NULL;
+        char* recvbuf = NULL;
+        size_t buflen;
         std::function<void(const char*)> log = NULL;
         TcpStatus status = TcpStatus::OK;
         std::string status_info;
@@ -83,7 +84,7 @@ namespace MailProxy {
          * @param default_buflen 默认的缓冲区大小
          * @param log_callback 记录日志的回调函数
         */
-        BasicTcp(
+        ClientTcp(
             size_t default_buflen = 4096,
             std::function<void(const char*)> log_callback = NULL
         );
@@ -91,7 +92,7 @@ namespace MailProxy {
         /**
          * @brief 关闭连接并释放所有资源。
         */
-        ~BasicTcp();
+        ~ClientTcp();
 
         /**
          * @brief 建立 TCP 连接。
