@@ -59,10 +59,9 @@ MailProxy::ClientTcp::ClientTcp(size_t default_buflen, std::function<void(const 
 MailProxy::ClientTcp::~ClientTcp()
 {
     free(recvbuf);
-    MailProxy::ClientTcp::tcp_shutdown();
-    if (status != TcpStatus::SocketFailed && ConnectSocket != INVALID_SOCKET)
+    tcp_shutdown();
+    if (status == TcpStatus::OK || status == TcpStatus::Closed)
         closesocket(ConnectSocket);
-    if ((int8_t)status >= 0)
         WSACleanup();
 }
 
@@ -151,7 +150,6 @@ void MailProxy::ClientTcp::tcp_send(const char* data, int flags)
 void MailProxy::ClientTcp::tcp_receive(int flags)
 {
     iResult = recv(ConnectSocket, recvbuf, buflen - 1, flags);
-    recvbuf[iResult] = 0;
     if (iResult < 0) {
         record_error(
             status,
@@ -166,6 +164,7 @@ void MailProxy::ClientTcp::tcp_receive(int flags)
         WSACleanup();
         return;
     }
+    recvbuf[iResult] = 0;
 }
 
 void MailProxy::ClientTcp::tcp_shutdown(int how)

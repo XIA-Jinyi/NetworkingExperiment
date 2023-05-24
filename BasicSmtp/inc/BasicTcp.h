@@ -51,15 +51,15 @@ namespace MailProxy {
         /**
          * @brief 接收数据失败
         */
-        RecvFailed = 0xF7,
+        RecvFailed = 0xEF,
         /**
          * @brief 发送数据失败
         */
-        SendFailed = 0xEF,
+        SendFailed = 0xDF,
         /**
          * @brief 关闭连接失败
         */
-        ShutdownFailed = 0xDF,
+        ShutdownFailed = 0xBF,
         /**
          * @brief 未知错误
         */
