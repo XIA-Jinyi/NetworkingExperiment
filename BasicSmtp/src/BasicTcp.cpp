@@ -60,9 +60,10 @@ MailProxy::ClientTcp::~ClientTcp()
 {
     free(recvbuf);
     tcp_shutdown();
-    if (status == TcpStatus::OK || status == TcpStatus::Closed)
+    if (status == TcpStatus::OK || status == TcpStatus::Closed) {
         closesocket(ConnectSocket);
         WSACleanup();
+    }
 }
 
 void MailProxy::ClientTcp::tcp_connect(const char* server_addr, const char* port)
@@ -149,7 +150,7 @@ void MailProxy::ClientTcp::tcp_send(const char* data, int flags)
 
 void MailProxy::ClientTcp::tcp_receive(int flags)
 {
-    iResult = recv(ConnectSocket, recvbuf, buflen - 1, flags);
+    iResult = recv(ConnectSocket, recvbuf, static_cast<int>(buflen - 1), flags);
     if (iResult < 0) {
         record_error(
             status,
