@@ -30,7 +30,7 @@ namespace MailProxy {
          */
         std::list<std::string> to_rcpt, cc_rcpt, bcc_rcpt;
         /**
-         * @brief 邮件标头中除 "To", "Cc" 和 "Bcc" 之外的部分
+         * @brief 邮件标头中除 "From", "To", "Cc" 和 "Bcc" 之外的部分
          * （如 "Subject" 等）
          * 
          * 用键值对存储标签和内容。
