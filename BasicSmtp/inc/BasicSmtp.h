@@ -154,9 +154,10 @@ namespace MailProxy {
         /**
          * @brief 发送构造好的邮件。
          * 
+         * @param sender
          * @param email 
          */
-        void smtp_send(Email email);
+        void smtp_send(std::string sender, Email email);
 
         /**
          * @brief 获取当前 SMTP 状态。
@@ -175,7 +176,9 @@ namespace MailProxy {
         /**
          * @brief 预留接口，供此模块与上层模块通信使用。
          * 
-         * @return std::string 直接返回 info，不做改动
+         * @attention 直接返回 info，不做改动
+         * 
+         * @return std::string 
          */
         auto get_smtp_info() -> std::string;
 
