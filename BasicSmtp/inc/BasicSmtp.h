@@ -142,6 +142,10 @@ namespace MailProxy {
         std::string info;
     
     public:
+        BasicSmtp();
+
+        ~BasicSmtp();
+
         /**
          * @brief 登录到 ESMTP 服务器。
          * 
