@@ -42,7 +42,7 @@ int main() {
     std::string filename, buffer, sender, mail_data{"From: <" + login_name + ">\n"};
     std::list<std::string> rcpt{};
     std::getline(std::cin, filename);
-    filename = "..\\..\\..\\saved\\2023.05.30-18.36.00-fQLMt2-4Qwp-uy9L.eml";
+    // filename = "..\\..\\..\\saved\\2023.05.30-18.36.00-fQLMt2-4Qwp-uy9L.eml";
     std::ifstream fin(filename.data());
     while (!fin.eof()) {
         std::getline(fin, buffer);
@@ -76,6 +76,8 @@ int main() {
         std::getline(fin, buffer);
         mail_data += buffer + "\n";
     }
+    std::cout << "Email prepared.\n";
+    std::cout << "Data length: "  << mail_data.length() << " bytes.\n";
     
     // Encode login name and auth code to Base 64.
     char* login_name_base64 = new char[base64_encode_len(strlen(login_name.data()))];

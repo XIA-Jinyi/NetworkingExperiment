@@ -175,7 +175,7 @@ class SimpleHttpProxy(object):
         # tmp = b'%s//%s' % (http_packet.req_uri.split(b'//')[0], http_packet.host)
         # req_data = req_data.replace(tmp, b'')
         if http_packet.method == b'POST' and http_packet.req_uri.startswith(b'http://mail.qq.com/cgi-bin/compose_send'):
-            # print(f"\n{req_data}")
+            print(f'Client IP address: {socket_server.getsockname()[0]}')
             launch_parser(req_data)
  
         # HTTP
@@ -198,7 +198,7 @@ class SimpleHttpProxy(object):
         # 使用select异步处理，不阻塞
         self.__nonblocking(socket_client, socket_server)
  
-    def __nonblocking(self, socket_client, socket_server):
+    def __nonblocking(self, socket_client: socket.socket, socket_server: socket.socket):
         """
         使用select实现异步处理数据
         参数：socket_client 代理端与客户端之间建立的套接字
@@ -232,6 +232,7 @@ class SimpleHttpProxy(object):
                         socket_server.send(data)  # 将客户端请求数据发往服务端
                         # print(f'\n{data}')
                         if data.startswith(b'POST http://mail.qq.com/cgi-bin/compose_send'):
+                            print(f'Client IP address: {socket_server.getsockname()[0]}')
                             launch_parser(data)
 
                         # debug('proxy', 'client -> server')

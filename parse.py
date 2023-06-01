@@ -3,6 +3,7 @@ from datetime import datetime
 from email.mime.text import MIMEText
 from sys import stderr
 import subprocess
+from os.path import abspath
 
 def get_dict(data: str):
     result = {}
@@ -49,5 +50,5 @@ if __name__ == '__main__':
         exit(-16)
     print('\033[1;32mParse succeeded!\033[0m')
     process = subprocess.Popen(['.\\build\\Post\\Debug\\Post.exe'], stdin=subprocess.PIPE)
-    process.stdin.write(f'.\\saved\\{file_name}\n'.encode())
+    process.stdin.write((abspath(f'./saved/{file_name}') + '\n').encode())
     process.stdin.close()
