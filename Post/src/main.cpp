@@ -42,7 +42,6 @@ int main() {
     std::string filename, buffer, sender, mail_data{"From: <" + login_name + ">\n"};
     std::list<std::string> rcpt{};
     std::getline(std::cin, filename);
-    // filename = "..\\..\\..\\saved\\2023.05.30-18.36.00-fQLMt2-4Qwp-uy9L.eml";
     std::ifstream fin(filename.data());
     while (!fin.eof()) {
         std::getline(fin, buffer);
