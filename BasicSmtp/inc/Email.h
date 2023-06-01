@@ -16,7 +16,7 @@
 #include <list>
 
 namespace MailProxy {
-    auto check_email_addr(const char* addr) -> bool;
+    extern "C" bool check_email_addr(const char* addr);
 
     struct Email {
         /**

@@ -1,0 +1,3 @@
+PROJECT(Post)
+
+ADD_EXECUTABLE(${PROJECT_NAME} src/main.cpp)

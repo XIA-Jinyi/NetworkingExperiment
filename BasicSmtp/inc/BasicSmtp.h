@@ -2,7 +2,7 @@
 * 
 * BasicSmtp.h
 * 
-* Author: 夏锦熠
+* Author: 夏锦熠, 黄凯博
 * 
 ******************************************************************************/
 
@@ -134,12 +134,16 @@ namespace MailProxy {
 
     class BasicSmtp {
     private:
-        ClientTcp tcp_conn;
+        ClientTcp* tcp_conn;
         SmtpStatus status;
         SmtpReplyCode reply_code;
         std::string reply_msg;
         std::function<void(const char*)> log = NULL;
         std::string info;
+
+        void send_email_rcpt(const std::list<std::string>& recipients);
+        void append_rcpt(std::string& rcptlist, const std::list<std::string>& rcpt);
+        bool check();
     
     public:
         BasicSmtp();
