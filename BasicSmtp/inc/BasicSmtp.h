@@ -143,6 +143,7 @@ namespace MailProxy {
 
         void send_email_rcpt(const std::list<std::string>& recipients);
         void append_rcpt(std::string& rcptlist, const std::list<std::string>& rcpt);
+        bool check_tcp();
         bool check();
     
     public:
@@ -166,6 +167,15 @@ namespace MailProxy {
          * @param email 
          */
         void smtp_send(std::string sender, Email email);
+
+        /**
+         * @brief 发送邮件原始数据。
+         * 
+         * @param sender 
+         * @param rcpt
+         * @param raw_data 
+         */
+        void smtp_send_raw(std::string sender, std::list<std::string> rcpt, std::string raw_data);
 
         /**
          * @brief 获取当前 SMTP 状态。

@@ -11,12 +11,11 @@
 #include "Email.h"
 #include "EscSeq.h"
 
-std::list<std::string> parse_rcpt(const char* val) {
+void append_rcpt(std::list<std::string>& rcpt_list, const char* val) {
     size_t val_len = strlen(val);
     char* copy = new char[val_len + 1];
     memcpy(copy, val, val_len + 1);
 
-    std::list<std::string> result;
     size_t begin_index;
     for (size_t i = 0; copy[i] != NULL; i++) {
         switch (copy[i]) {
@@ -25,7 +24,7 @@ std::list<std::string> parse_rcpt(const char* val) {
             break;
         case '>':
             copy[i] = NULL;
-            result.push_back(std::string(copy + begin_index));
+            rcpt_list.push_back(std::string(copy + begin_index));
             break;
         default:
             break;
@@ -33,69 +32,58 @@ std::list<std::string> parse_rcpt(const char* val) {
     }
 
     delete [] copy;
-    return result;
 }
 
 int main() {
     std::cout << CONSOLE_SET C_CYAN << "Start posting.\n" << CONSOLE_RESET;
     
-    // Parsing email archive.
-    std::string filename, buffer, sender;
-    std::list<std::string> to_rcpt, cc_rcpt, bcc_rcpt;
-    std::map<std::string, std::string> ext_headers;
+    // Parse email archive.
+    std::string login_name = "1429099037@qq.com", auth_code = "mhoiwlvonflhjjfi";
+    std::string filename, buffer, sender, mail_data{"From: <" + login_name + ">\n"};
+    std::list<std::string> rcpt{};
     std::getline(std::cin, filename);
-    // filename = "..\\..\\..\\saved\\2023.05.30-18.36.00-fQLMt2-4Qwp-uy9L.eml";
+    filename = "..\\..\\..\\saved\\2023.05.30-18.36.00-fQLMt2-4Qwp-uy9L.eml";
     std::ifstream fin(filename.data());
     while (!fin.eof()) {
         std::getline(fin, buffer);
         if (buffer == "") {
+            mail_data += buffer + "\n";
             break;
         }
         else if (buffer.substr(0, 3) == "To:") {
-            to_rcpt = parse_rcpt(buffer.data());
+            mail_data += buffer + "\n";
+            append_rcpt(rcpt, buffer.data());
         }
         else if (buffer.substr(0, 3) == "Cc:") {
-            cc_rcpt = parse_rcpt(buffer.data());
+            mail_data += buffer + "\n";
+            append_rcpt(rcpt, buffer.data());
         }
         else if (buffer.substr(0, 4) == "Bcc:") {
-            bcc_rcpt = parse_rcpt(buffer.data());
+            mail_data += buffer + "\n";
+            append_rcpt(rcpt, buffer.data());
         }
         else if (buffer.substr(0, 5) == "From:") {
             sender = buffer.substr(6);
         }
-        else if (buffer.substr(0, 12) == "Content-Type") {
-            break;
+        else if (buffer.substr(0, 5) == "Date:") {
+            continue;
         }
         else {
-            size_t index;
-            for (index = 0; buffer[index] != ':'; index++);
-            ext_headers.insert({buffer.substr(0, index), buffer.substr(index + 2)});
+            mail_data += buffer + "\n";
         }
     }
-    std::string mail_body = "";
     while (!fin.eof()) {
-        mail_body += buffer;
-        mail_body += "\n";
         std::getline(fin, buffer);
+        mail_data += buffer + "\n";
     }
-
-    // Constructing mail.
-    MailProxy::Email mail;
-    mail.body = mail_body;
-    mail.to_rcpt = to_rcpt;
-    mail.cc_rcpt = cc_rcpt;
-    mail.bcc_rcpt = bcc_rcpt;
-    mail.ext_headers = ext_headers;
-    std::cout << CONSOLE_SET C_CYAN << "Email constructed.\n" << CONSOLE_RESET;
     
-    // Encoding login name and auth code to Base 64.
-    std::string login_name = "1429099037@qq.com", auth_code = "mhoiwlvonflhjjfi";
+    // Encode login name and auth code to Base 64.
     char* login_name_base64 = new char[base64_encode_len(strlen(login_name.data()))];
     char* auth_code_base64 = new char[base64_encode_len(strlen(auth_code.data()))];
     base64_encode(login_name_base64, login_name.data(), strlen(login_name.data()));
     base64_encode(auth_code_base64, auth_code.data(), strlen(auth_code.data()));
 
-    // Sending email.
+    // Login.
     MailProxy::BasicSmtp smtp_conn;
     smtp_conn.smtp_login("smtp.qq.com", login_name_base64, auth_code_base64);
     if (smtp_conn.get_smtp_status() == MailProxy::SmtpStatus::SmtpErr) {
@@ -109,11 +97,15 @@ int main() {
     }
     delete [] login_name_base64;
     delete [] auth_code_base64;
-    smtp_conn.smtp_send(login_name, mail);
+    std::cout << CONSOLE_SET C_GREEN << "Login succeeded!" << CONSOLE_RESET << std::endl;
+
+    // Send email.
+    smtp_conn.smtp_send_raw(login_name, rcpt, mail_data);
     if (smtp_conn.get_smtp_status() == MailProxy::SmtpStatus::SmtpErr) {
         std::cerr << CONSOLE_SET F_BOLD C_RED << "SMTP posting failed with code "
-                  << static_cast<int>(smtp_conn.get_smtp_reply().code) << CONSOLE_RESET << std::endl;
-        // std::cout << CONSOLE_SET F_REGULAR C_CYAN << "Sending feedback\n" << CONSOLE_RESET;
+                  << static_cast<int>(smtp_conn.get_smtp_reply().code) << std::endl;
+        std::cerr << smtp_conn.get_smtp_reply().msg << CONSOLE_RESET << std::endl;
+        std::cout << CONSOLE_SET F_REGULAR C_CYAN << "Sending feedback\n" << CONSOLE_RESET;
     }
     else if (smtp_conn.get_smtp_status() == MailProxy::SmtpStatus::TcpErr) {
         std::cerr << CONSOLE_SET F_BOLD C_RED << "TCP service error!" << CONSOLE_RESET << std::endl;

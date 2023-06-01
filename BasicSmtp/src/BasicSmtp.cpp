@@ -12,22 +12,17 @@
 #include "EscSeq.h"
 
 MailProxy::BasicSmtp::BasicSmtp() {
-	tcp_conn = new MailProxy::ClientTcp(8192, [](const char* log) -> void
-		{
-			std::cerr << CONSOLE_SET F_BOLD C_RED << "Tcp: " << log << CONSOLE_RESET << std::endl;
-		});
+    tcp_conn = new MailProxy::ClientTcp(8192, [](const char *log) -> void {
+        std::cerr << CONSOLE_SET C_RED << "Tcp: " << log << CONSOLE_RESET << std::endl;
+    });
 };
 
 MailProxy::BasicSmtp::~BasicSmtp(){
     tcp_conn->tcp_send("QUIT\r\n");
-    if (!check()) return;
+    if (check_tcp())
+        tcp_conn->tcp_receive();
     delete tcp_conn;
 };
-
-/**
- * @brief 关闭连接并释放所有资源。
-*/
-
 
 auto MailProxy::BasicSmtp::get_smtp_status() -> MailProxy::SmtpStatus {
     return this->status;
@@ -47,50 +42,42 @@ auto MailProxy::BasicSmtp::get_tcp_status() -> MailProxy::TcpStatus {
     return this->tcp_conn->get_status();
 }
 
-/**
-         * @brief 登录到 ESMTP 服务器。
-         *
-         * @param server_addr 服务器地址
-         * @param username 用户名（base64 编码）
-         * @param password 密码（base64 编码）
-         */
 void MailProxy::BasicSmtp::smtp_login(const char* server_addr, const char* username, const char* password)
 {
     // 若服务器为 QQ 邮箱，则发送消息的结尾应为 "\r\n"
-    tcp_conn->tcp_connect(server_addr, "25"); 
+    tcp_conn->tcp_connect(server_addr, "25");
     tcp_conn->tcp_receive();
     if (!check()) return;
    
     tcp_conn->tcp_send("EHLO Bupt\r\n");
+    if (!check_tcp()) return;
     tcp_conn->tcp_receive();
     if (!check()) return;
    
 
     tcp_conn->tcp_send("AUTH LOGIN\r\n");
+    if (!check_tcp()) return;
     tcp_conn->tcp_receive();
     if (!check()) return;
     
     // 发送方邮箱的base64
     tcp_conn->tcp_send((username + std::string("\r\n")).c_str());
+    if (!check_tcp()) return;
     tcp_conn->tcp_receive();
     if (!check()) return;
       
     // 授权码base64
     tcp_conn->tcp_send((password + std::string("\r\n")).c_str());
+    if (!check_tcp()) return;
     tcp_conn->tcp_receive();
     if (!check()) return;
 }
 
-/**
- * @brief 发送构造好的邮件。
- *
- * @param sender
- * @param email
- */
 void MailProxy::BasicSmtp::smtp_send(std::string sender, MailProxy::Email email)
 {
     // 设定发送对象
     tcp_conn->tcp_send(("MAIL FROM:<" + sender + ">" + std::string("\r\n")).c_str());
+    if (!check_tcp()) return;
     tcp_conn->tcp_receive();
     if (!check()) return;
 
@@ -109,6 +96,7 @@ void MailProxy::BasicSmtp::smtp_send(std::string sender, MailProxy::Email email)
     std::string headers_str;
     
     tcp_conn->tcp_send("DATA\r\n");
+    if (!check_tcp()) return;
     tcp_conn->tcp_receive();
     if (!check()) return;
 
@@ -121,12 +109,33 @@ void MailProxy::BasicSmtp::smtp_send(std::string sender, MailProxy::Email email)
         "To: <" +  rcptlist + ">\r\n"
         "Cc: <" + cc_rcptlist + ">\r\n"
         "Bcc: <" + bcc_rcptlist + ">\r\n"
-        + headers_str+ //" \r\n"
+        + headers_str + " \r\n"
         "\r\n" + 
         email.body + "\r\n"
         "\r\n.\r\n";
     // std::cout << message << std::endl;
     tcp_conn->tcp_send(message.c_str());
+    if (!check_tcp()) return;
+    tcp_conn->tcp_receive();
+    if (!check()) return;
+}
+
+void MailProxy::BasicSmtp::smtp_send_raw(std::string sender, std::list<std::string> rcpt, std::string raw_data)
+{
+    tcp_conn->tcp_send(("MAIL FROM:<" + sender + ">" + std::string("\r\n")).c_str());
+    if (!check_tcp()) return;
+    tcp_conn->tcp_receive();
+    if (!check()) return;
+
+    send_email_rcpt(rcpt);
+    
+    tcp_conn->tcp_send("DATA\r\n");
+    if (!check_tcp()) return;
+    tcp_conn->tcp_receive();
+    if (!check()) return;
+
+    tcp_conn->tcp_send((raw_data + "\r\n.\r\n").c_str());
+    if (!check_tcp()) return;
     tcp_conn->tcp_receive();
     if (!check()) return;
 }
@@ -136,8 +145,9 @@ void MailProxy::BasicSmtp::send_email_rcpt(const std::list<std::string>& recipie
     for (const std::string& rcpt : recipients)
     {   
         tcp_conn->tcp_send(("RCPT TO:<" + rcpt + ">" + std::string("\r\n")).c_str());
+        if (!check_tcp()) return;
         tcp_conn->tcp_receive();
-        // std::cout << tcp_conn->get_received() << std::endl;
+        if (!check()) return;
     }
 }
 
@@ -149,6 +159,14 @@ void MailProxy::BasicSmtp::append_rcpt(std::string& rcptlist, const std::list<st
         if (std::next(it) != rcpt.end())
             rcptlist += ">;<";
     }
+}
+
+bool MailProxy::BasicSmtp::check_tcp() {
+    if (tcp_conn->get_status() != TcpStatus::OK) {
+        this->status = SmtpStatus::TcpErr;
+        return false;
+    }
+    return true;
 }
 
 bool MailProxy::BasicSmtp::check() {
@@ -169,16 +187,10 @@ bool MailProxy::BasicSmtp::check() {
     
     //设置reply_code
     reply_code = static_cast<SmtpReplyCode>(code_num);
-    
-    /*
-    * 设置status
-    *2开头认为正确 
-    *4, 5开头认为SMTP错误
-    */
+
+    // 设置 status
+    // 4, 5 开头认为SMTP错误
     switch (code_num / 100) {
-    case 2:
-        status = SmtpStatus::OK;
-        break;
     case 4:
     case 5:
         status = SmtpStatus::SmtpErr;
