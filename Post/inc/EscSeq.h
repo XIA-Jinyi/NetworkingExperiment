@@ -1,3 +1,8 @@
+#pragma once
+
+#ifndef ESCSEQ_H_
+#define ESCSEQ_H_
+
 #define CONSOLE_SET "\033["
 #define CONSOLE_RESET "\033[0m"
 
@@ -16,3 +21,5 @@
 #define C_PURPLE "35m"
 #define C_CYAN "36m"
 #define C_WHITE "37m"
+
+#endif
