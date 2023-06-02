@@ -30,9 +30,9 @@ if __name__ == '__main__':
         lines = ['From: %s\n' % data_dict['sendmailname']]
         if (val := data_dict.get('to')) != '':
             lines += [f'To: {val}\n']
-        if (val := data_dict.get('cc')) != '':
+        if (val := data_dict.get('cc')) != None:
             lines += [f'Cc: {val}\n']
-        if (val := data_dict.get('bcc')) != '':
+        if (val := data_dict.get('bcc')) != None:
             lines += [f'Bcc: {val}\n']
         lines += ['Subject: %s\n' % data_dict['subject']]
         lines += ['Date: %s\n' % datetime.now().strftime('%a, %d %B %Y %H:%M:%S +0800')]
