@@ -105,12 +105,29 @@ int main() {
     if (smtp_conn.get_smtp_status() == MailProxy::SmtpStatus::SmtpErr) {
         std::cerr << CONSOLE_SET F_BOLD C_RED << "SMTP posting failed with code "
                   << static_cast<int>(smtp_conn.get_smtp_reply().code) << std::endl;
-        std::cerr << smtp_conn.get_smtp_reply().msg << CONSOLE_RESET << std::endl;
-        std::cout << CONSOLE_SET F_REGULAR C_CYAN << "Sending feedback\n" << CONSOLE_RESET;
+        std::cerr << smtp_conn.get_smtp_reply().msg << CONSOLE_RESET;
+        std::cout << CONSOLE_SET F_REGULAR C_CYAN << "Sending feedback...\n" << CONSOLE_RESET;
+        MailProxy::Email feedback{
+            "Due to SMTP problems, your email was not posted successfully.\n"
+            "SMTP feedback message: " + smtp_conn.get_smtp_reply().msg +
+            "The original email is listed as follows.\n"
+            "--------------------------------------------------------------------------------\n" + mail_data,
+            {sender},
+            {},
+            {},
+            {{"Subject", "Your email was not posted."}}
+        };
+        smtp_conn.smtp_send(login_name, feedback);
+        if (smtp_conn.get_smtp_status() == MailProxy::SmtpStatus::SmtpErr) {
+            std::cerr << CONSOLE_SET F_BOLD C_RED << "SMTP posting failed with code "
+                  << static_cast<int>(smtp_conn.get_smtp_reply().code) << std::endl;
+            std::cerr << smtp_conn.get_smtp_reply().msg << CONSOLE_RESET << std::endl;
+            exit(0);
+        }
     }
-    else if (smtp_conn.get_smtp_status() == MailProxy::SmtpStatus::TcpErr) {
+    if (smtp_conn.get_smtp_status() == MailProxy::SmtpStatus::TcpErr) {
         std::cerr << CONSOLE_SET F_BOLD C_RED << "TCP service error!" << CONSOLE_RESET << std::endl;
-        exit(-2);
+        exit(0);
     }
     std::cout << CONSOLE_SET F_BOLD C_GREEN << "Post succeeded!" << CONSOLE_RESET << std::endl;
 
